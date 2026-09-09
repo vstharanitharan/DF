@@ -1,0 +1,196 @@
+{
+  "metadata": {
+    "model_name": "RecurrentLatentMazeSolver (ConvGRU)",
+    "param_count": 123713,
+    "test_set_size": 100,
+    "grid_size": [
+      15,
+      15
+    ],
+    "random_seed": 999,
+    "provenance": "PRECOMPUTED_REAL",
+    "eval_summary": "Evaluated on held-out synthetic test mazes across reasoning steps K=1..20 with empirical latency benchmarking."
+  },
+  "scaling_curve": [
+    {
+      "step": 1,
+      "exact_solve_rate": 0.01,
+      "exact_solve_percent": 1.0,
+      "path_iou": 0.5594,
+      "mean_bce_loss": 0.3281,
+      "measured_latency_ms": 0.666,
+      "loop_count": 1
+    },
+    {
+      "step": 2,
+      "exact_solve_rate": 0.02,
+      "exact_solve_percent": 2.0,
+      "path_iou": 0.6553,
+      "mean_bce_loss": 0.2518,
+      "measured_latency_ms": 1.168,
+      "loop_count": 2
+    },
+    {
+      "step": 3,
+      "exact_solve_rate": 0.19,
+      "exact_solve_percent": 19.0,
+      "path_iou": 0.7663,
+      "mean_bce_loss": 0.1739,
+      "measured_latency_ms": 1.747,
+      "loop_count": 3
+    },
+    {
+      "step": 4,
+      "exact_solve_rate": 0.35,
+      "exact_solve_percent": 35.0,
+      "path_iou": 0.8329,
+      "mean_bce_loss": 0.1253,
+      "measured_latency_ms": 2.373,
+      "loop_count": 4
+    },
+    {
+      "step": 5,
+      "exact_solve_rate": 0.44,
+      "exact_solve_percent": 44.0,
+      "path_iou": 0.8769,
+      "mean_bce_loss": 0.0945,
+      "measured_latency_ms": 2.911,
+      "loop_count": 5
+    },
+    {
+      "step": 6,
+      "exact_solve_rate": 0.53,
+      "exact_solve_percent": 53.0,
+      "path_iou": 0.9093,
+      "mean_bce_loss": 0.0736,
+      "measured_latency_ms": 3.519,
+      "loop_count": 6
+    },
+    {
+      "step": 7,
+      "exact_solve_rate": 0.63,
+      "exact_solve_percent": 63.0,
+      "path_iou": 0.9312,
+      "mean_bce_loss": 0.0594,
+      "measured_latency_ms": 4.098,
+      "loop_count": 7
+    },
+    {
+      "step": 8,
+      "exact_solve_rate": 0.71,
+      "exact_solve_percent": 71.0,
+      "path_iou": 0.9475,
+      "mean_bce_loss": 0.0485,
+      "measured_latency_ms": 5.292,
+      "loop_count": 8
+    },
+    {
+      "step": 9,
+      "exact_solve_rate": 0.74,
+      "exact_solve_percent": 74.0,
+      "path_iou": 0.9564,
+      "mean_bce_loss": 0.0417,
+      "measured_latency_ms": 5.465,
+      "loop_count": 9
+    },
+    {
+      "step": 10,
+      "exact_solve_rate": 0.81,
+      "exact_solve_percent": 81.0,
+      "path_iou": 0.9661,
+      "mean_bce_loss": 0.0364,
+      "measured_latency_ms": 6.155,
+      "loop_count": 10
+    },
+    {
+      "step": 11,
+      "exact_solve_rate": 0.84,
+      "exact_solve_percent": 84.0,
+      "path_iou": 0.9712,
+      "mean_bce_loss": 0.0327,
+      "measured_latency_ms": 6.568,
+      "loop_count": 11
+    },
+    {
+      "step": 12,
+      "exact_solve_rate": 0.84,
+      "exact_solve_percent": 84.0,
+      "path_iou": 0.9742,
+      "mean_bce_loss": 0.0307,
+      "measured_latency_ms": 7.849,
+      "loop_count": 12
+    },
+    {
+      "step": 13,
+      "exact_solve_rate": 0.85,
+      "exact_solve_percent": 85.0,
+      "path_iou": 0.9751,
+      "mean_bce_loss": 0.0294,
+      "measured_latency_ms": 7.694,
+      "loop_count": 13
+    },
+    {
+      "step": 14,
+      "exact_solve_rate": 0.87,
+      "exact_solve_percent": 87.0,
+      "path_iou": 0.9783,
+      "mean_bce_loss": 0.0285,
+      "measured_latency_ms": 8.583,
+      "loop_count": 14
+    },
+    {
+      "step": 15,
+      "exact_solve_rate": 0.88,
+      "exact_solve_percent": 88.0,
+      "path_iou": 0.9801,
+      "mean_bce_loss": 0.0279,
+      "measured_latency_ms": 9.374,
+      "loop_count": 15
+    },
+    {
+      "step": 16,
+      "exact_solve_rate": 0.86,
+      "exact_solve_percent": 86.0,
+      "path_iou": 0.9812,
+      "mean_bce_loss": 0.0277,
+      "measured_latency_ms": 9.059,
+      "loop_count": 16
+    },
+    {
+      "step": 17,
+      "exact_solve_rate": 0.86,
+      "exact_solve_percent": 86.0,
+      "path_iou": 0.9811,
+      "mean_bce_loss": 0.0278,
+      "measured_latency_ms": 10.795,
+      "loop_count": 17
+    },
+    {
+      "step": 18,
+      "exact_solve_rate": 0.87,
+      "exact_solve_percent": 87.0,
+      "path_iou": 0.9814,
+      "mean_bce_loss": 0.0281,
+      "measured_latency_ms": 10.959,
+      "loop_count": 18
+    },
+    {
+      "step": 19,
+      "exact_solve_rate": 0.88,
+      "exact_solve_percent": 88.0,
+      "path_iou": 0.982,
+      "mean_bce_loss": 0.0284,
+      "measured_latency_ms": 11.737,
+      "loop_count": 19
+    },
+    {
+      "step": 20,
+      "exact_solve_rate": 0.88,
+      "exact_solve_percent": 88.0,
+      "path_iou": 0.9813,
+      "mean_bce_loss": 0.0289,
+      "measured_latency_ms": 12.884,
+      "loop_count": 20
+    }
+  ]
+}
