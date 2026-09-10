@@ -11,9 +11,9 @@ Every requirement from the official Problem Statement (`Pathway PS (1).md`, Line
 
 | Requirement | Problem Statement Ref. | Exact File & Line Reference in Repo | Status | Notes / Action Items |
 |---|---|---|:---:|---|
-| **Public Artifact URL** (opens without sign-in) | Line 335 | Deployed via GitHub Pages or Vercel | `NEEDS MY REVIEW` | Local server runs at `http://localhost:8888`. Public GitHub Pages requires 1 click in repo Settings or GitHub Actions deployment (see deployment steps). |
+| **Public Artifact URL** (opens without sign-in) | Line 335 | [https://theshrihari.github.io/Dataforge-Submission/](https://theshrihari.github.io/Dataforge-Submission/) | `DONE` | Deployed and verified live via GitHub Pages. Serves interactive app and all precomputed data without login. |
 | **Public Source Code Repository** | Line 337 | [TheShriHari/Dataforge-Submission](https://github.com/TheShriHari/Dataforge-Submission) | `DONE` | Verified public via GitHub CLI (`isPrivate: false`). |
-| **The Blog / Concept Summary as a PDF** | Line 339, 363–395 | [docs/one-page-summary.md](file:///docs/one-page-summary.md#L1-L63) | `NEEDS MY REVIEW` | Markdown source is complete (888 words, within 500–950 limit). Requires user to export to PDF (`docs/one-page-summary.pdf`). |
+| **The Blog / Concept Summary as a PDF** | Line 339, 363–395 | [docs/one-page-summary.pdf](file:///docs/one-page-summary.pdf) | `DONE` | Formatted 1-page publication PDF generated from `docs/one-page-summary.md` (931 words, within 500–950 word limit). |
 | **Complete README** | Line 341, 351 | [README.md](file:///README.md#L1-L200) | `DONE` | Comprehensive README covering claim, audience, architecture, provenance, scaling data, and reproducibility. |
 | **Clear Setup & Reproduction Instructions** | Line 343, 351 | [README.md](file:///README.md#L149-L181) | `DONE` | Full step-by-step instructions from fresh clone (isolated venv, pip install, pytest, local server). |
 | **At Least 3 Primary Papers (2022–2026)** | Line 345–347 | [README.md](file:///README.md#L30-L33), [docs/CREDITS.md](file:///docs/CREDITS.md#L41-L54), [docs/one-page-summary.md](file:///docs/one-page-summary.md#L14-L52) | `DONE` | Cites Kosowski et al. (2025, arXiv:2509.26507), Kosowski et al. (2026, arXiv:2608.09888), Snell et al. (2024, arXiv:2408.03314), and Goyal et al. (2024, arXiv:2310.02226). |

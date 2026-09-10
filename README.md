@@ -1,5 +1,6 @@
 # Inference-Time Scaling Explainer
 > **DataForge x Pathway Hackathon Submission**  
+> **Live Interactive Explainer**: [https://theshrihari.github.io/Dataforge-Submission/](https://theshrihari.github.io/Dataforge-Submission/)  
 > An educational, interactive web artifact demonstrating inference-time latent compute scaling without verbalized natural-language reasoning tokens.
 
 ---
