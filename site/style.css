@@ -411,7 +411,7 @@ body {
   width: 100%;
   max-width: 320px;
   aspect-ratio: 1;
-  background: #9ca3af;
+  background: #0f172a;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -516,7 +516,8 @@ body {
   border-radius: 1px;
 }
 
-.swatch-wall { background: #1e293b; }
+.swatch-wall { background: #1e293b; border: 1px solid #475569; }
+.swatch-open { background: #ffffff; border: 1px solid #94a3b8; }
 .swatch-pred { background: var(--cell-path-pred); }
 .swatch-gt { background: var(--cell-path-gt); }
 .swatch-start { background: #3b82f6; border-radius: 50%; width: 10px; height: 10px; }

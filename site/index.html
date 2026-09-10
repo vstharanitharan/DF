@@ -177,6 +177,68 @@
               </div>
               <div class="metric-stat-box">
                 <div class="metric-stat-label">Status</div>
+            </div>
+            <div id="maze-status-pill" class="status-pill status-unsolved" aria-live="polite">
+              <span>&#9888;</span> Incomplete Path
+            </div>
+          </div>
+        </div>
+
+        <!-- Side-by-Side Comparison Grid -->
+        <div class="maze-comparison-grid">
+          <!-- Predicted Model Output -->
+          <div class="maze-panel">
+            <div class="maze-panel-header">
+              <div class="maze-panel-title">
+                <span style="color: var(--accent-emerald);">&#9670;</span> Model Latent Prediction
+              </div>
+              <span class="badge-provenance badge-real">Step Output</span>
+            </div>
+            
+            <div id="pred-maze-board" class="maze-board-container" role="region" aria-label="Model predicted path grid">
+              <!-- Rendered via JS -->
+            </div>
+
+            <div class="live-metrics-bar">
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Path IoU</div>
+                <div class="metric-stat-val" id="metric-iou">0.0%</div>
+              </div>
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Complete Path</div>
+                <div class="metric-stat-val" id="metric-solve">NO</div>
+              </div>
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Effort Budget</div>
+                <div class="metric-stat-val" id="metric-compute">K = 1</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ground Truth Solution -->
+          <div class="maze-panel">
+            <div class="maze-panel-header">
+              <div class="maze-panel-title">
+                <span style="color: var(--accent-amber);">&#9670;</span> Ground Truth Shortest Path
+              </div>
+              <span class="badge-provenance badge-real">BFS Optimal</span>
+            </div>
+
+            <div id="gt-maze-board" class="maze-board-container" role="region" aria-label="Ground truth shortest path grid">
+              <!-- Rendered via JS -->
+            </div>
+
+            <div class="live-metrics-bar">
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Solver Type</div>
+                <div class="metric-stat-val" style="font-size: 0.95rem; color: var(--accent-amber);">BFS Shortest</div>
+              </div>
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Optimality</div>
+                <div class="metric-stat-val">100%</div>
+              </div>
+              <div class="metric-stat-box">
+                <div class="metric-stat-label">Status</div>
                 <div class="metric-stat-val" style="color: var(--accent-emerald);">TARGET</div>
               </div>
             </div>
@@ -186,6 +248,7 @@
         <!-- Legend -->
         <div class="maze-legend" aria-label="Maze cell type legend">
           <div class="legend-item"><div class="legend-swatch swatch-wall"></div> Wall (Barrier)</div>
+          <div class="legend-item"><div class="legend-swatch swatch-open"></div> Open Corridor</div>
           <div class="legend-item"><div class="legend-swatch swatch-pred"></div> Model Predicted Path</div>
           <div class="legend-item"><div class="legend-swatch swatch-gt"></div> Ground Truth Path</div>
           <div class="legend-item"><div class="legend-swatch swatch-start"></div> Start (S)</div>
@@ -193,7 +256,7 @@
         </div>
       </section>
 
-      <!-- Module 2: Selected Maze Trace (FR3) -->
+      <!-- Module 2: Empirical Scaling Curve (FR3) -->
       <section class="section-block" id="aggregate-scaling" aria-labelledby="heading-scaling">
         <div class="section-header">
           <div class="section-title-wrap">
@@ -204,17 +267,28 @@
               Measured across 100 held-out test mazes evaluated at each loop count K ∈ [1, 20]. Notice steep early gains and the plateau after K=10.
             </p>
           </div>
-          <span class="badge-provenance badge-real">&#9679; PRECOMPUTED TRACE REPLAY</span>
+          <span id="scaling-provenance-badge" class="badge-provenance badge-real">&#9679; PRECOMPUTED 100-TEST EVAL</span>
         </div>
 
         <div class="chart-container-box">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
-              <span style="color: #10b981;">&mdash; Path Complete (0% / 100%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-              <span style="color: #8b5cf6;">--- Path IoU (%)</span>
+          <!-- View Switcher -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem;" role="tablist" aria-label="Scaling curve view selection">
+              <button id="btn-view-aggregate" class="tab-btn active" role="tab" aria-selected="true">&#128200; 100-Maze Aggregate Curve</button>
+              <button id="btn-view-trace" class="tab-btn" role="tab" aria-selected="false">&#128269; Selected Puzzle Trace</button>
             </div>
             <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
-              <span id="selected-trace-label">Selected maze | Precomputed output</span>
+              <span id="selected-trace-label">N=100 Test Mazes | Seed=999 | ConvGRU Core</span>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div id="chart-legend-text" style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
+              <span style="color: #10b981;">&mdash; Exact Solve Rate (%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+              <span style="color: #8b5cf6;">--- Mean Path IoU (%)</span>
+            </div>
+            <div id="chart-hint-text" style="font-size: 0.75rem; color: var(--text-muted);">
+              Slider K = <span id="chart-k-indicator">1</span>
             </div>
           </div>
 
@@ -226,18 +300,18 @@
 
         <!-- Accessible Data Table for Screen Readers and Verification -->
         <div style="margin-top: 2rem;">
-          <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem; color: var(--text-primary);">
-            Selected Maze Trace Data
+          <h3 id="table-scaling-title" style="font-size: 1.05rem; margin-bottom: 0.75rem; color: var(--text-primary);">
+            100-Maze Aggregate Scaling Data
           </h3>
           <div style="overflow-x: auto;">
-            <table class="data-table" aria-label="Selected maze reasoning effort trace data table">
-              <thead>
+            <table class="data-table" aria-label="Scaling data table">
+              <thead id="table-scaling-head">
                 <tr>
                   <th scope="col">Reasoning Loops (K)</th>
-                  <th scope="col">Path Complete</th>
-                  <th scope="col">Path IoU (%)</th>
-                  <th scope="col">Predicted Path Cells</th>
-                  <th scope="col">Ground-Truth Path Cells</th>
+                  <th scope="col">Exact Solve Rate (%)</th>
+                  <th scope="col">Mean Path IoU (%)</th>
+                  <th scope="col">BCE Loss</th>
+                  <th scope="col">Measured Latency (ms / maze)</th>
                 </tr>
               </thead>
               <tbody id="table-scaling-body">
@@ -247,7 +321,6 @@
           </div>
         </div>
         <div id="trace-verdict" class="trace-verdict" aria-live="polite">
-          <!-- Updated by JS from the selected trace. -->
         </div>
       </section>
 

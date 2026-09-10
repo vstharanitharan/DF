@@ -12,6 +12,7 @@ const state = {
   mazeLoadError: null,
   currentPuzzleIdx: 0,
   currentK: 1,
+  chartMode: "aggregate",
   autoTimer: null,
 };
 
@@ -31,9 +32,6 @@ const DEFAULT_BDH_DATA = {
   ]
 };
 
-/**
- * Initialize application on DOM load
- */
 document.addEventListener("DOMContentLoaded", async () => {
   await loadData();
   setupEventListeners();
@@ -156,6 +154,28 @@ function setupEventListeners() {
     });
   }
 
+  // Chart View Toggle (100-Maze Aggregate vs Single Puzzle Trace)
+  const btnViewAggregate = document.getElementById("btn-view-aggregate");
+  const btnViewTrace = document.getElementById("btn-view-trace");
+  if (btnViewAggregate && btnViewTrace) {
+    btnViewAggregate.addEventListener("click", () => {
+      state.chartMode = "aggregate";
+      btnViewAggregate.classList.add("active");
+      btnViewAggregate.setAttribute("aria-selected", "true");
+      btnViewTrace.classList.remove("active");
+      btnViewTrace.setAttribute("aria-selected", "false");
+      renderScalingChart();
+    });
+    btnViewTrace.addEventListener("click", () => {
+      state.chartMode = "trace";
+      btnViewTrace.classList.add("active");
+      btnViewTrace.setAttribute("aria-selected", "true");
+      btnViewAggregate.classList.remove("active");
+      btnViewAggregate.setAttribute("aria-selected", "false");
+      renderScalingChart();
+    });
+  }
+
   // Keyboard navigation shortcuts
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type === "range") return;
@@ -167,9 +187,6 @@ function setupEventListeners() {
   });
 }
 
-/**
- * Render dynamic slider ticks based on max K from data
- */
 function renderSliderTicks() {
   const ticksContainer = document.getElementById("slider-ticks");
   if (!ticksContainer) return;
@@ -363,17 +380,19 @@ function computeWallSegments(walls, size) {
  * Build SVG string for wall segments
  */
 function buildWallSVG(walls, segments, size) {
+  // Corridors (paths) are open cells where walls[r][c] < 0.5 -> rendered pure white
   const openCells = walls.flatMap((row, r) => row.map((cell, c) => (
-    cell >= 0.5 ? `<rect x="${c}" y="${r}" width="1" height="1" fill="#f8fafc"/>` : ""
+    cell < 0.5 ? `<rect x="${c}" y="${r}" width="1" height="1" fill="#ffffff"/>` : ""
   ))).join("");
   const lines = segments
-    .map(s => `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="#111827" stroke-width="0.12" stroke-linecap="square"/>`)
+    .map(s => `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="#0f172a" stroke-width="0.10" stroke-linecap="square"/>`)
     .join("");
 
+  // Base background is dark slate grey / black (#1e293b) representing the walls
   return `<svg viewBox="0 0 ${size} ${size}" class="maze-svg" role="img" aria-label="Maze line drawing">
-    <rect width="${size}" height="${size}" fill="#9ca3af"/>
+    <rect width="${size}" height="${size}" fill="#1e293b"/>
     <g>${openCells}</g>
-    <rect width="${size}" height="${size}" fill="none" stroke="#111827" stroke-width="0.12"/>
+    <rect width="${size}" height="${size}" fill="none" stroke="#0f172a" stroke-width="0.12"/>
     <g>${lines}</g>
   </svg>`;
 }
@@ -388,12 +407,12 @@ function addMarkers(svgString, puzzle, size) {
   const goalY  = puzzle.goal[0] + 0.5;
 
   const markers = `
-    <circle cx="${startX}" cy="${startY}" r="0.22" fill="#3b82f6" class="maze-start-marker"/>
+    <circle cx="${startX}" cy="${startY}" r="0.26" fill="#2563eb" stroke="#ffffff" stroke-width="0.05" class="maze-start-marker"/>
     <text x="${startX}" y="${startY}" text-anchor="middle" dominant-baseline="central"
-          font-size="0.35" font-weight="800" fill="#1e293b" font-family="monospace">S</text>
-    <circle cx="${goalX}" cy="${goalY}" r="0.22" fill="#ec4899" class="maze-goal-marker"/>
+          font-size="0.32" font-weight="800" fill="#ffffff" font-family="monospace">S</text>
+    <circle cx="${goalX}" cy="${goalY}" r="0.26" fill="#ec4899" stroke="#ffffff" stroke-width="0.05" class="maze-goal-marker"/>
     <text x="${goalX}" y="${goalY}" text-anchor="middle" dominant-baseline="central"
-          font-size="0.35" font-weight="800" fill="#1e293b" font-family="monospace">G</text>
+          font-size="0.32" font-weight="800" fill="#ffffff" font-family="monospace">G</text>
   `;
 
   return svgString.replace("</g>", "</g>" + markers);
@@ -420,7 +439,7 @@ function addPathOverlay(svgString, pathCoords, isGroundTruth) {
       const x2 = c2 + 0.5;
       const y2 = r2 + 0.5;
       const pathClass = isGroundTruth ? "maze-path-gt" : "maze-path-pred";
-      segments.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="0.18" stroke-linecap="round" class="${pathClass} maze-path-animated" style="--segment-index: ${segments.length}"/>`);
+      segments.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="0.22" stroke-linecap="round" class="${pathClass} maze-path-animated" style="--segment-index: ${segments.length}"/>`);
     }
     // If dist > 1, break the line here (do not draw a jump)
   }
@@ -451,27 +470,33 @@ function getSelectedMazeCurve() {
   const puzzle = state.tracesData?.puzzles?.[state.currentPuzzleIdx];
   if (!puzzle?.steps) return [];
 
+  const gtLen = puzzle.ground_truth_path?.length || 1;
+
   return Object.values(puzzle.steps)
     .sort((a, b) => a.step - b.step)
-    .map((step) => ({
-      step: step.step,
-      completePercent: step.is_solved ? 100 : 0,
-      pathIouPercent: step.iou * 100,
-      predictedPathCells: step.predicted_path?.length || 0,
-      groundTruthPathCells: puzzle.ground_truth_path?.length || 0,
-      isSolved: step.is_solved,
-    }));
+    .map((step) => {
+      const predLen = step.predicted_path?.length || 0;
+      // Calculate continuous progress towards goal as % of ground truth length traversed
+      const progressPercent = step.is_solved ? 100 : Math.min(99, Math.round((predLen / gtLen) * 100));
+      return {
+        step: step.step,
+        progressPercent,
+        pathIouPercent: step.iou * 100,
+        predictedPathCells: predLen,
+        groundTruthPathCells: gtLen,
+        isSolved: step.is_solved,
+      };
+    });
 }
 
-/** Render the selected maze's K-by-K trace, revealing only visited steps. */
+/** Render the empirical scaling chart (Aggregate 100-Maze or Selected Trace) */
 function renderScalingChart() {
   const chartContainer = document.getElementById("scaling-chart-wrap");
   if (!chartContainer) return;
 
-  const curve = getSelectedMazeCurve();
-  if (curve.length === 0) return;
-  const revealedCurve = curve.filter((pt) => pt.step <= state.currentK);
-  const maxK = curve.length > 0 ? curve[curve.length - 1].step : 20;
+  const kIndicator = document.getElementById("chart-k-indicator");
+  if (kIndicator) kIndicator.textContent = state.currentK;
+
   const width = 800;
   const height = 260;
   const padLeft = 60;
@@ -482,74 +507,182 @@ function renderScalingChart() {
   const chartW = width - padLeft - padRight;
   const chartH = height - padTop - padBottom;
 
-  // Scale functions
+  const maxK = state.accuracyData && state.accuracyData.scaling_curve
+    ? Math.max(...state.accuracyData.scaling_curve.map(pt => pt.step))
+    : 20;
+
   const xPos = (k) => padLeft + ((k - 1) / (maxK - 1)) * chartW;
   const yPos = (pct) => padTop + chartH - (pct / 100) * chartH;
-
-  // Build SVG
-  let svg = `<svg viewBox="0 0 ${width} ${height}" class="svg-chart" role="img" aria-label="Line chart showing the selected maze completion and path IoU through reasoning steps 1 to ${maxK}">`;
-
-  // Grid lines
-  for (let yPct = 0; yPct <= 100; yPct += 20) {
-    const y = yPos(yPct);
-    svg += `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#1e293b" stroke-dasharray="3 3"/>`;
-    svg += `<text x="${padLeft - 10}" y="${y + 4}" fill="#64748b" font-size="11" text-anchor="end" font-family="monospace">${yPct}%</text>`;
-  }
-
-  // X Axis Ticks
-  for (let k = 1; k <= maxK; k++) {
-    const x = xPos(k);
-    svg += `<line x1="${x}" y1="${padTop + chartH}" x2="${x}" y2="${padTop + chartH + 5}" stroke="#475569"/>`;
-    svg += `<text x="${x}" y="${padTop + chartH + 20}" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="monospace">K=${k}</text>`;
-  }
-
-  // Draw this maze's completion state (0% until it reaches the goal, then 100%).
-  const solvePoints = revealedCurve.map((pt) => `${xPos(pt.step)},${yPos(pt.completePercent)}`).join(" ");
-  svg += `<polyline fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${solvePoints}"/>`;
-
-  // Draw Path IoU Line (Violet)
-  const iouPoints = revealedCurve.map((pt) => `${xPos(pt.step)},${yPos(pt.pathIouPercent)}`).join(" ");
-  svg += `<polyline fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="4 4" stroke-linecap="round" points="${iouPoints}"/>`;
-
-  // Data Dots
-  revealedCurve.forEach((pt) => {
-    const x = xPos(pt.step);
-    const ySolve = yPos(pt.completePercent);
-    svg += `<circle cx="${x}" cy="${ySolve}" r="5" fill="#10b981" stroke="#0a0d14" stroke-width="2"><title>Step K=${pt.step}: Path complete = ${pt.completePercent}%</title></circle>`;
-  });
-
-  svg += `</svg>`;
-  chartContainer.innerHTML = svg;
-
-  // Populate accessible table
-  const tbody = document.getElementById("table-scaling-body");
-  if (tbody) {
-    tbody.innerHTML = "";
-    revealedCurve.forEach((pt) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><strong>K = ${pt.step}</strong></td>
-        <td style="color: #34d399; font-weight: 700;">${pt.isSolved ? "YES (100%)" : "NO (0%)"}</td>
-        <td style="color: #c084fc;">${pt.pathIouPercent.toFixed(1)}%</td>
-        <td>${pt.predictedPathCells}</td>
-        <td>${pt.groundTruthPathCells}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  const puzzle = state.tracesData.puzzles[state.currentPuzzleIdx];
+  
+  const isAggregate = (state.chartMode || "aggregate") === "aggregate";
+  const provBadge = document.getElementById("scaling-provenance-badge");
   const traceLabel = document.getElementById("selected-trace-label");
-  if (traceLabel) traceLabel.textContent = `${puzzle.title} | Precomputed output`;
-
-  const current = curve.find((pt) => pt.step === state.currentK) || revealedCurve.at(-1);
-  const first = curve[0];
+  const legendText = document.getElementById("chart-legend-text");
+  const tableTitle = document.getElementById("table-scaling-title");
+  const tableHead = document.getElementById("table-scaling-head");
+  const tbody = document.getElementById("table-scaling-body");
   const verdict = document.getElementById("trace-verdict");
-  if (verdict && current) {
-    const improvement = current.pathIouPercent - first.pathIouPercent;
-    const isSupported = current.isSolved || improvement > 0;
-    verdict.className = `trace-verdict ${isSupported ? "verdict-supported" : "verdict-pending"}`;
-    verdict.innerHTML = `<strong>${isSupported ? "Verdict: supports the hypothesis for this trace." : "Verdict: not yet established at this K."}</strong> At K=${current.step}, Path IoU is ${current.pathIouPercent.toFixed(1)}% (${improvement >= 0 ? "+" : ""}${improvement.toFixed(1)} points versus K=1)${current.isSolved ? "; the path reaches the goal." : "; the path has not yet reached the goal."} This is an interactive replay of precomputed test data, not a new live user-data experiment.`;
+
+  if (isAggregate) {
+    if (provBadge) provBadge.textContent = "● PRECOMPUTED 100-TEST EVAL";
+    if (traceLabel) traceLabel.textContent = "N=100 Test Mazes | Seed=999 | ConvGRU Core";
+    if (legendText) {
+      legendText.innerHTML = `<span style="color: #10b981;">&mdash; Exact Solve Rate (%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp; <span style="color: #8b5cf6;">--- Mean Path IoU (%)</span>`;
+    }
+    if (tableTitle) tableTitle.textContent = "100-Maze Aggregate Scaling Data";
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th scope="col">Reasoning Loops (K)</th>
+          <th scope="col">Exact Solve Rate (%)</th>
+          <th scope="col">Mean Path IoU (%)</th>
+          <th scope="col">BCE Loss</th>
+          <th scope="col">Measured Latency (ms / maze)</th>
+        </tr>
+      `;
+    }
+
+    const curve = state.accuracyData ? state.accuracyData.scaling_curve : [];
+    if (curve.length === 0) return;
+
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="svg-chart" role="img" aria-label="100-maze aggregate empirical scaling curve">`;
+
+    for (let yPct = 0; yPct <= 100; yPct += 20) {
+      const y = yPos(yPct);
+      svg += `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#1e293b" stroke-dasharray="3 3"/>`;
+      svg += `<text x="${padLeft - 10}" y="${y + 4}" fill="#64748b" font-size="11" text-anchor="end" font-family="monospace">${yPct}%</text>`;
+    }
+
+    for (let k = 1; k <= maxK; k++) {
+      const x = xPos(k);
+      svg += `<line x1="${x}" y1="${padTop + chartH}" x2="${x}" y2="${padTop + chartH + 5}" stroke="#475569"/>`;
+      svg += `<text x="${x}" y="${padTop + chartH + 20}" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="monospace">K=${k}</text>`;
+    }
+
+    const curX = xPos(state.currentK);
+    svg += `<line x1="${curX}" y1="${padTop}" x2="${curX}" y2="${padTop + chartH}" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.6"/>`;
+
+    const solvePoints = curve.map((pt) => `${xPos(pt.step)},${yPos(pt.exact_solve_percent)}`).join(" ");
+    svg += `<polyline fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${solvePoints}"/>`;
+
+    const iouPoints = curve.map((pt) => `${xPos(pt.step)},${yPos(pt.path_iou * 100)}`).join(" ");
+    svg += `<polyline fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="4 4" stroke-linecap="round" points="${iouPoints}"/>`;
+
+    curve.forEach((pt) => {
+      const x = xPos(pt.step);
+      const ySolve = yPos(pt.exact_solve_percent);
+      const yIou = yPos(pt.path_iou * 100);
+      const isCur = pt.step === state.currentK;
+
+      svg += `<circle cx="${x}" cy="${ySolve}" r="${isCur ? 6.5 : 4}" fill="${isCur ? '#34d399' : '#10b981'}" stroke="#0a0d14" stroke-width="2"><title>K=${pt.step}: Solve Rate = ${pt.exact_solve_percent}%</title></circle>`;
+      svg += `<circle cx="${x}" cy="${yIou}" r="${isCur ? 5.5 : 3.5}" fill="${isCur ? '#c084fc' : '#8b5cf6'}" stroke="#0a0d14" stroke-width="1.5"><title>K=${pt.step}: Mean Path IoU = ${(pt.path_iou * 100).toFixed(1)}%</title></circle>`;
+    });
+
+    svg += `</svg>`;
+    chartContainer.innerHTML = svg;
+
+    if (tbody) {
+      tbody.innerHTML = "";
+      curve.forEach((pt) => {
+        const tr = document.createElement("tr");
+        if (pt.step === state.currentK) tr.style.background = "rgba(56, 189, 248, 0.08)";
+        tr.innerHTML = `
+          <td><strong>K = ${pt.step}</strong>${pt.step === state.currentK ? ' <span style="color:#38bdf8; font-size:0.75rem;">(Active)</span>' : ''}</td>
+          <td style="color: #34d399; font-weight: 700;">${pt.exact_solve_percent}%</td>
+          <td style="color: #c084fc;">${(pt.path_iou * 100).toFixed(1)}%</td>
+          <td>${pt.mean_bce_loss.toFixed(4)}</td>
+          <td style="font-family: monospace; color: #38bdf8;">${pt.measured_latency_ms.toFixed(3)} ms</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    const curPt = curve.find(pt => pt.step === state.currentK) || curve[0];
+    if (verdict && curPt) {
+      verdict.className = "trace-verdict verdict-supported";
+      verdict.innerHTML = `<strong>100-Maze Benchmark:</strong> At K=${curPt.step}, the model achieves an Exact Solve Rate of <strong>${curPt.exact_solve_percent}%</strong> and Mean Path IoU of <strong>${(curPt.path_iou * 100).toFixed(1)}%</strong> with latency of ${curPt.measured_latency_ms.toFixed(2)} ms/maze. Notice the steep early accuracy gains (from 1.0% up to 76.0% at K=10) that smoothly transition into diminishing returns beyond K=10.`;
+    }
+  } else {
+    const puzzle = state.tracesData?.puzzles?.[state.currentPuzzleIdx];
+    if (provBadge) provBadge.textContent = "● PRECOMPUTED TRACE REPLAY";
+    if (traceLabel) traceLabel.textContent = `${puzzle ? puzzle.title : 'Puzzle'} | Precomputed output`;
+    if (legendText) {
+      legendText.innerHTML = `<span style="color: #10b981;">&mdash; Path Progress to Goal (%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp; <span style="color: #8b5cf6;">--- Path IoU (%)</span>`;
+    }
+    if (tableTitle) tableTitle.textContent = `Selected Maze Trace Data (${puzzle ? puzzle.title : ''})`;
+    if (tableHead) {
+      tableHead.innerHTML = `
+        <tr>
+          <th scope="col">Reasoning Loops (K)</th>
+          <th scope="col">Goal Reached</th>
+          <th scope="col">Path Progress (%)</th>
+          <th scope="col">Path IoU (%)</th>
+          <th scope="col">Walk Steps / Target</th>
+        </tr>
+      `;
+    }
+
+    const curve = getSelectedMazeCurve();
+    if (curve.length === 0) return;
+    const revealedCurve = curve.filter((pt) => pt.step <= state.currentK);
+
+    let svg = `<svg viewBox="0 0 ${width} ${height}" class="svg-chart" role="img" aria-label="Selected maze trace replay">`;
+
+    for (let yPct = 0; yPct <= 100; yPct += 20) {
+      const y = yPos(yPct);
+      svg += `<line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#1e293b" stroke-dasharray="3 3"/>`;
+      svg += `<text x="${padLeft - 10}" y="${y + 4}" fill="#64748b" font-size="11" text-anchor="end" font-family="monospace">${yPct}%</text>`;
+    }
+
+    for (let k = 1; k <= maxK; k++) {
+      const x = xPos(k);
+      svg += `<line x1="${x}" y1="${padTop + chartH}" x2="${x}" y2="${padTop + chartH + 5}" stroke="#475569"/>`;
+      svg += `<text x="${x}" y="${padTop + chartH + 20}" fill="#94a3b8" font-size="11" text-anchor="middle" font-family="monospace">K=${k}</text>`;
+    }
+
+    const progressPoints = revealedCurve.map((pt) => `${xPos(pt.step)},${yPos(pt.progressPercent)}`).join(" ");
+    svg += `<polyline fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${progressPoints}"/>`;
+
+    const iouPoints = revealedCurve.map((pt) => `${xPos(pt.step)},${yPos(pt.pathIouPercent)}`).join(" ");
+    svg += `<polyline fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-dasharray="4 4" stroke-linecap="round" points="${iouPoints}"/>`;
+
+    revealedCurve.forEach((pt) => {
+      const x = xPos(pt.step);
+      const yProg = yPos(pt.progressPercent);
+      const yIou = yPos(pt.pathIouPercent);
+      const isCur = pt.step === state.currentK;
+
+      svg += `<circle cx="${x}" cy="${yProg}" r="${isCur ? 6.5 : 4.5}" fill="#10b981" stroke="#0a0d14" stroke-width="2"><title>K=${pt.step}: Progress = ${pt.progressPercent}%</title></circle>`;
+      svg += `<circle cx="${x}" cy="${yIou}" r="${isCur ? 5.5 : 3.5}" fill="#8b5cf6" stroke="#0a0d14" stroke-width="1.5"><title>K=${pt.step}: Path IoU = ${pt.pathIouPercent.toFixed(1)}%</title></circle>`;
+    });
+
+    svg += `</svg>`;
+    chartContainer.innerHTML = svg;
+
+    if (tbody) {
+      tbody.innerHTML = "";
+      revealedCurve.forEach((pt) => {
+        const tr = document.createElement("tr");
+        if (pt.step === state.currentK) tr.style.background = "rgba(56, 189, 248, 0.08)";
+        tr.innerHTML = `
+          <td><strong>K = ${pt.step}</strong>${pt.step === state.currentK ? ' <span style="color:#38bdf8; font-size:0.75rem;">(Active)</span>' : ''}</td>
+          <td style="color: ${pt.isSolved ? '#34d399' : '#f59e0b'}; font-weight: 700;">${pt.isSolved ? "YES (Connected)" : "Incomplete"}</td>
+          <td style="color: #34d399; font-weight: 700;">${pt.progressPercent}%</td>
+          <td style="color: #c084fc;">${pt.pathIouPercent.toFixed(1)}%</td>
+          <td>${pt.predictedPathCells} / ${pt.groundTruthPathCells}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    const current = curve.find((pt) => pt.step === state.currentK) || revealedCurve.at(-1);
+    const first = curve[0];
+    if (verdict && current) {
+      const improvement = current.pathIouPercent - first.pathIouPercent;
+      const isSupported = current.isSolved || improvement > 0;
+      verdict.className = `trace-verdict ${isSupported ? "verdict-supported" : "verdict-pending"}`;
+      verdict.innerHTML = `<strong>${isSupported ? "Verdict: supports the hypothesis for this trace." : "Verdict: not yet established at this K."}</strong> At K=${current.step}, Path IoU is ${current.pathIouPercent.toFixed(1)}% (${improvement >= 0 ? "+" : ""}${improvement.toFixed(1)} points vs K=1), and Path Progress is ${current.progressPercent}%. ${current.isSolved ? "The predicted path connects start to goal!" : "The path is still navigating toward the goal."}`;
+    }
   }
 }
 
