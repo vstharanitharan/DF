@@ -114,6 +114,7 @@
             <div style="display: flex; gap: 0.5rem;">
               <button id="btn-step-prev" class="tab-btn" aria-label="Decrease reasoning effort">&minus; Less Effort</button>
               <button id="btn-step-next" class="tab-btn" aria-label="Increase reasoning effort">+ More Effort</button>
+              <button id="btn-auto-effort" class="tab-btn auto-effort-btn" aria-label="Automatically advance reasoning effort" aria-pressed="false">&#9654; Auto</button>
             </div>
             <div id="maze-status-pill" class="status-pill status-unsolved" aria-live="polite">
               <span>&#9888;</span> Incomplete Path
@@ -192,7 +193,7 @@
         </div>
       </section>
 
-      <!-- Module 2: Aggregate Accuracy vs. Effort Curve (FR3) -->
+      <!-- Module 2: Selected Maze Trace (FR3) -->
       <section class="section-block" id="aggregate-scaling" aria-labelledby="heading-scaling">
         <div class="section-header">
           <div class="section-title-wrap">
@@ -203,17 +204,17 @@
               Measured across 100 held-out test mazes evaluated at each loop count K ∈ [1, 20]. Notice steep early gains and the plateau after K=10.
             </p>
           </div>
-          <span class="badge-provenance badge-real">&#9679; PRECOMPUTED 100-TEST EVAL</span>
+          <span class="badge-provenance badge-real">&#9679; PRECOMPUTED TRACE REPLAY</span>
         </div>
 
         <div class="chart-container-box">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
             <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary);">
-              <span style="color: #10b981;">&mdash; Exact Solve Rate (%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp; 
+              <span style="color: #10b981;">&mdash; Path Complete (0% / 100%)</span> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
               <span style="color: #8b5cf6;">--- Path IoU (%)</span>
             </div>
             <div style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);">
-              N=100 Mazes | Seed=999 | ConvGRU Core
+              <span id="selected-trace-label">Selected maze | Precomputed output</span>
             </div>
           </div>
 
@@ -226,17 +227,17 @@
         <!-- Accessible Data Table for Screen Readers and Verification -->
         <div style="margin-top: 2rem;">
           <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem; color: var(--text-primary);">
-            Exact Numerical Scaling Data
+            Selected Maze Trace Data
           </h3>
           <div style="overflow-x: auto;">
-            <table class="data-table" aria-label="Accuracy versus reasoning effort steps data table">
+            <table class="data-table" aria-label="Selected maze reasoning effort trace data table">
               <thead>
                 <tr>
                   <th scope="col">Reasoning Loops (K)</th>
-                  <th scope="col">Exact Solve Rate (%)</th>
-                  <th scope="col">Mean Path IoU (%)</th>
-                  <th scope="col">BCE Loss</th>
-                  <th scope="col">Measured Latency (ms / maze)</th>
+                  <th scope="col">Path Complete</th>
+                  <th scope="col">Path IoU (%)</th>
+                  <th scope="col">Predicted Path Cells</th>
+                  <th scope="col">Ground-Truth Path Cells</th>
                 </tr>
               </thead>
               <tbody id="table-scaling-body">
@@ -244,6 +245,9 @@
               </tbody>
             </table>
           </div>
+        </div>
+        <div id="trace-verdict" class="trace-verdict" aria-live="polite">
+          <!-- Updated by JS from the selected trace. -->
         </div>
       </section>
 
