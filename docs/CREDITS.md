@@ -46,7 +46,7 @@ The machine learning implementation (`ml/model.py`, `ml/train.py`, `ml/evaluate.
    - **Foundational Biological & Algorithmic Bridge**: Kosowski et al. (2025), *"The Dragon Hatchling: The Missing Link Between the Transformer and Models of the Brain"* ([arXiv:2509.26507](https://arxiv.org/abs/2509.26507)). Introduces the BDH family where internal state recurrently updates in latent space.
    - **In-Context Latent Reasoning Benchmark**: Kosowski et al. (2026), *"BDH-CQ: In-Context Learning with Recurrent Latent Reasoning"* ([arXiv:2608.09888](https://arxiv.org/abs/2608.09888)). Evaluates variable reasoning effort on ARC-AGI-1 without emitting intermediate verbal tokens (Table 5).
 2. **Convolutional Gated Recurrence (ConvGRU)**:
-   - Ballas et al. (2015), *"Delving Deeper into Convolutional Networks with Shape-Preserving Recurrent Models"* ([arXiv:1511.06432](https://arxiv.org/abs/1511.06432)). Inspires the shared-weight spatial gating mechanism that prevents representation explosion across large $K$.
+   - ConvGRU formulation follows the standard mathematical equations introduced by Ballas et al. (2015), *"Delving Deeper into Convolutional Networks with Shape-Preserving Recurrent Models"* ([arXiv:1511.06432](https://arxiv.org/abs/1511.06432)); the module in `ml/model.py` is an independent implementation written from scratch, not adapted from their codebase.
 3. **Inference-Time Scaling Principles**:
    - Snell et al. (2024), *"Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters"* ([arXiv:2408.03314](https://arxiv.org/abs/2408.03314)). Formalizes test-time compute allocation trade-offs against parameter scaling.
    - Goyal et al. (2024), *"Think before you speak: Training Language Models With Pause Tokens"* (ICLR 2024 / [arXiv:2310.02226](https://arxiv.org/abs/2310.02226)). Motivates non-verbalized computational pauses during neural inference.
@@ -63,4 +63,4 @@ The machine learning implementation (`ml/model.py`, `ml/train.py`, `ml/evaluate.
 
 ## 6. Repository Licensing
 
-- The entirety of the original source code, training scripts, evaluation harnesses, and web interface is distributed under the **Apache-2.0 License** (see [LICENSE](../LICENSE)).
+- The entirety of the original source code, training scripts, evaluation harnesses, and web interface is distributed under the **MIT License** (see [LICENSE](../LICENSE)).

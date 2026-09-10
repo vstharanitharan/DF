@@ -30,6 +30,7 @@ Measured across $N=100$ held-out $15 \times 15$ synthetic mazes (Seed 999, `resu
 - **Empirical Diminishing Returns ($K=10 \to 20$)**:
   - Pushing $K$ from $10$ to $20$ yields only a **$+7.0\%$** increase in solve rate (81.0% $\to$ 88.0%) and plateaued Path IoU (96.61% $\to$ 98.13%).
   - Meanwhile, inference latency more than doubles from **6.155 ms to 12.884 ms/maze**. Every marginal gain after the topological path is discovered incurs strictly linear compute cost for near-zero returns.
+- **Training Horizon & Generalization**: $K=16–20$ extends beyond the $K \sim \text{Uniform}(1, 15)$ training curriculum (`ml/train.py`). The model generalizes to these values because the recurrent core is weight-shared and has no explicit step-count parameter, but this was not part of the training distribution.
 
 ---
 
