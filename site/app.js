@@ -291,17 +291,6 @@ function updateMazeDisplay() {
   const kStr = String(state.currentK);
   const stepData = puzzle.steps[kStr];
 
-  // Update Status Pill
-  const statusContainer = document.getElementById("maze-status-pill");
-  if (statusContainer && stepData) {
-    if (stepData.is_solved) {
-      statusContainer.className = "status-pill status-solved";
-      statusContainer.innerHTML = "<span>&#10003;</span> Path Solved &amp; Connected";
-    } else {
-      statusContainer.className = "status-pill status-unsolved";
-      statusContainer.innerHTML = "<span>&#9888;</span> Incomplete / Dead End";
-    }
-  }
 
   // Update Live Metrics
   const metricIou = document.getElementById("metric-iou");
@@ -327,11 +316,6 @@ function updateMazeDisplay() {
 
 /** Render a clear, accessible state instead of leaving empty maze boards. */
 function renderMazeLoadError() {
-  const statusContainer = document.getElementById("maze-status-pill");
-  if (statusContainer) {
-    statusContainer.className = "status-pill status-unsolved";
-    statusContainer.innerHTML = "<span>&#9888;</span> Maze data unavailable";
-  }
 
   ["pred-maze-board", "gt-maze-board"].forEach((id) => {
     const board = document.getElementById(id);
