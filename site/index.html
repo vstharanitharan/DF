@@ -122,67 +122,6 @@
           </div>
         </div>
 
-        <!-- Side-by-Side Comparison Grid -->
-        <div class="maze-comparison-grid">
-          <!-- Predicted Model Output -->
-          <div class="maze-panel">
-            <div class="maze-panel-header">
-              <div class="maze-panel-title">
-                <span style="color: var(--accent-emerald);">&#9670;</span> Model Latent Prediction
-              </div>
-              <span class="badge-provenance badge-real">Step Output</span>
-            </div>
-            
-            <div id="pred-maze-board" class="maze-board-container" role="region" aria-label="Model predicted path grid">
-              <!-- Rendered via JS -->
-            </div>
-
-            <div class="live-metrics-bar">
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Path IoU</div>
-                <div class="metric-stat-val" id="metric-iou">0.0%</div>
-              </div>
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Complete Path</div>
-                <div class="metric-stat-val" id="metric-solve">NO</div>
-              </div>
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Effort Budget</div>
-                <div class="metric-stat-val" id="metric-compute">K = 1</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ground Truth Solution -->
-          <div class="maze-panel">
-            <div class="maze-panel-header">
-              <div class="maze-panel-title">
-                <span style="color: var(--accent-amber);">&#9670;</span> Ground Truth Shortest Path
-              </div>
-              <span class="badge-provenance badge-real">BFS Optimal</span>
-            </div>
-
-            <div id="gt-maze-board" class="maze-board-container" role="region" aria-label="Ground truth shortest path grid">
-              <!-- Rendered via JS -->
-            </div>
-
-            <div class="live-metrics-bar">
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Solver Type</div>
-                <div class="metric-stat-val" style="font-size: 0.95rem; color: var(--accent-amber);">BFS Shortest</div>
-              </div>
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Optimality</div>
-                <div class="metric-stat-val">100%</div>
-              </div>
-              <div class="metric-stat-box">
-                <div class="metric-stat-label">Status</div>
-            </div>
-            <div id="maze-status-pill" class="status-pill status-unsolved" aria-live="polite">
-              <span>&#9888;</span> Incomplete Path
-            </div>
-          </div>
-        </div>
 
         <!-- Side-by-Side Comparison Grid -->
         <div class="maze-comparison-grid">
