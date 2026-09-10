@@ -77,6 +77,7 @@ def main():
     border-bottom: 1px solid #cbd5e1;
     padding-bottom: 1px;
     font-weight: 600;
+    break-after: avoid;
   }}
   p {{
     margin: 0 0 4px 0;
@@ -92,7 +93,9 @@ def main():
     width: 100%;
     border-collapse: collapse;
     margin: 4px 0;
-    font-size: 8pt;
+    font-size: 7.2pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }}
   th, td {{
     border: 1px solid #cbd5e1;

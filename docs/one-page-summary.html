@@ -31,6 +31,7 @@
     border-bottom: 1px solid #cbd5e1;
     padding-bottom: 1px;
     font-weight: 600;
+    break-after: avoid;
   }
   p {
     margin: 0 0 4px 0;
@@ -46,7 +47,9 @@
     width: 100%;
     border-collapse: collapse;
     margin: 4px 0;
-    font-size: 8pt;
+    font-size: 7.2pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
   th, td {
     border: 1px solid #cbd5e1;
@@ -81,7 +84,7 @@
 <h1>Inference-Time Scaling in Latent Space: Recurrent Non-Verbal Reasoning</h1>
 
 <p><strong>Track Submission</strong>: DataForge x Pathway — <em>Explain the Frontier</em><br />
-<strong>Artifact</strong>: <a href="https://github.com/TheShriHari/Dataforge-Submission">https://github.com/TheShriHari/Dataforge-Submission</a><br />
+<strong>Interactive Web Explainer</strong>: <a href="https://theshrihari.github.io/Dataforge-Submission/">https://theshrihari.github.io/Dataforge-Submission/</a> | <strong>Repository</strong>: <a href="https://github.com/TheShriHari/Dataforge-Submission">https://github.com/TheShriHari/Dataforge-Submission</a><br />
 <strong>Topic</strong>: Test-Time Compute Scaling &amp; Recurrent Latent Reasoning (BDH / BDH-CQ)</p>
 
 <hr />
@@ -96,36 +99,28 @@
 
 <h3>2. Design Motivation: Latent Iteration vs. Verbalized Chain-of-Thought</h3>
 
-<p>Current test-time scaling in Large Language Models primarily relies on autoregressive Chain-of-Thought (CoT) prompting or beam-search sampling (Snell et al., 2024, <a href="https://arxiv.org/abs/2408.03314">arXiv:2408.03314</a>). While effective, verbalized CoT suffers from severe architectural constraints:</p>
+<p>Current LLM test-time scaling primarily relies on autoregressive Chain-of-Thought (CoT) prompting or search sampling (Snell et al., 2024, <a href="https://arxiv.org/abs/2408.03314">arXiv:2408.03314</a>). While effective, verbalized CoT suffers from severe architectural bottlenecks:</p>
 
 <ol>
-<li><strong>Context &amp; Memory Bloat</strong>: Every verbalized reasoning step appends new tokens to the context window, causing <i>O</i>(<i>N</i>²) self-attention cost and quadratic Key-Value (KV) cache memory expansion.</li>
-<li><strong>Syntactic Fragility &amp; Semantic Drift</strong>: Verbal reasoning requires tokens to adhere to natural-language grammar; an early syntactic or hallucinations flaw permanently corrupts all downstream generated tokens.</li>
-<li><strong>Difference from Standard Forward Passes</strong>: A standard feedforward pass (e.g., standard Transformer layer stack or feedforward CNN) applies a static sequence of layers where total compute is strictly bound to parameter depth <i>L</i>. In contrast, <strong>recurrent latent iteration</strong> feeds the hidden state back into a shared-weight core for <i>K</i> discrete iterations:
+<li><strong>Context &amp; Memory Bloat</strong>: Every verbalized reasoning token appends to the context window, causing <i>O</i>(<i>N</i>²) self-attention cost and quadratic Key-Value (KV) cache expansion.</li>
+<li><strong>Syntactic Fragility &amp; Drift</strong>: Verbal reasoning demands strict grammatical adherence; an early hallucination or syntactic failure permanently derails subsequent steps.</li>
+<li><strong>Contrast with Standard Forward Passes</strong>: Standard Transformer or feedforward CNN passes apply a static layer sequence where compute is strictly bound to parameter depth <i>L</i>. In contrast, <strong>recurrent latent iteration</strong> loops hidden states through a weight-shared core for <i>K</i> discrete iterations:
 <b><i>h<sub>k</sub></i> = Core(<i>h</i><sub><i>k</i>-1</sub>, <i>x</i>)</b> &nbsp;for <i>k</i> ∈ [1, <i>K</i>]
-This decouples inference computation budget from static parameter size, preserving a constant tensor memory footprint (<i>h</i> ∈ ℝ<sup><i>C</i> × <i>H</i> × <i>W</i></sup>) with zero emitted text tokens.</li>
+This decouples inference compute budget from parameter count, preserving a constant tensor memory footprint (<i>h</i> ∈ ℝ<sup><i>C</i> × <i>H</i> × <i>W</i></sup>) with zero emitted text tokens.</li>
 </ol>
 
 <hr />
 
 <h3>3. Technical Mechanism &amp; Measured Trade-Offs</h3>
 
-<p>Our implementation investigates this mechanism on 2D maze navigation, where long-range spatial reachability requires non-local computational depth. Using a 123,713-parameter shared Convolutional GRU (ConvGRU) core (<code>ml/model.py</code>), each recurrence step <i>k</i> expands the effective spatial receptive field by 2 cells. </p>
+<p>Our implementation evaluates this mechanism on 2D maze pathfinding, where long-range connectivity requires deep propagation. Using a 123,713-parameter shared Convolutional GRU (ConvGRU) core (<code>ml/model.py</code>), each recurrence step <i>k</i> expands the effective receptive field by 2 grid cells.</p>
 
 <p>Measured across N=100 held-out 15 × 15 synthetic mazes (Seed 999, <code>results/accuracy_by_effort.json</code>):</p>
 
 <ul>
-<li><strong>Steep Early Accuracy Phase (<i>K</i> = 1 → 10)</strong>:
-<ul>
-<li>Exact Solve Rate jumps from <strong>1.0%</strong> (<i>K</i> = 1, 0.666 ms latency) to <strong>44.0%</strong> (<i>K</i> = 5, 2.911 ms), reaching <strong>81.0%</strong> at <i>K</i> = 10 (6.155 ms).</li>
-<li>Continuous Path IoU rises from <strong>55.94%</strong> to <strong>96.61%</strong>, demonstrating rapid convergence as information propagates through corridors.</li>
-</ul></li>
-<li><strong>Empirical Diminishing Returns (<i>K</i> = 10 → 20)</strong>:
-<ul>
-<li>Pushing <i>K</i> from 10 to 20 yields only a <strong>+7.0%</strong> increase in solve rate (81.0% → 88.0%) and plateaued Path IoU (96.61% → 98.13%).</li>
-<li>Meanwhile, inference latency more than doubles from <strong>6.155 ms to 12.884 ms/maze</strong>. Every marginal gain after the topological path is discovered incurs strictly linear compute cost for near-zero returns.</li>
-</ul></li>
-<li><strong>Training Horizon &amp; Generalization</strong>: <i>K</i> = 16–20 extends beyond the <i>K</i> ~ Uniform(1, 15) training curriculum (<code>ml/train.py</code>). The model generalizes to these values because the recurrent core is weight-shared and has no explicit step-count parameter, but this was not part of the training distribution.</li>
+<li><strong>Steep Early Accuracy Phase (<i>K</i> = 1 → 10)</strong>: Exact solve rate climbs from <strong>1.0%</strong> (<i>K</i> = 1, 0.666 ms) to <strong>44.0%</strong> (<i>K</i> = 5, 2.911 ms) and <strong>81.0%</strong> at <i>K</i> = 10 (6.155 ms). Path IoU rises from <strong>55.94%</strong> to <strong>96.61%</strong>, reflecting rapid topological discovery.</li>
+<li><strong>Empirical Diminishing Returns (<i>K</i> = 10 → 20)</strong>: Increasing <i>K</i> from 10 to 20 yields only a <strong>+7.0%</strong> gain in solve rate (81.0% → 88.0%) and plateaued Path IoU (96.61% → 98.13%), while latency more than doubles from <strong>6.155 ms to 12.884 ms/maze</strong>.</li>
+<li><strong>Training Horizon &amp; Generalization</strong>: <i>K</i> = 16–20 extends beyond the <i>K</i> ~ Uniform(1, 15) training curriculum (<code>ml/train.py</code>). The model generalizes because the recurrent core is weight-shared and lacks step-count parameters, but this was not part of the training distribution.</li>
 </ul>
 
 <hr />
@@ -179,27 +174,40 @@ This decouples inference computation budget from static parameter size, preservi
 
 <h3>5. Architectural Roles: BDH vs. BDH-CQ</h3>
 
-<p>To avoid conflation, the two literature systems are distinguished:</p>
+<p>To preserve technical precision, the two literature systems are distinguished:</p>
 
 <ul>
-<li><strong>The Dragon Hatchling (BDH)</strong> (Kosowski et al., 2025, <a href="https://arxiv.org/abs/2509.26507">arXiv:2509.26507</a>): A biologically-inspired, post-transformer foundational architecture that establishes recurrent latent computation and non-autoregressive parallel processing across continuous representations.</li>
-<li><strong>BDH-CQ</strong> (Kosowski et al., 2026, <a href="https://arxiv.org/abs/2608.09888">arXiv:2608.09888</a>): A specialized system built within the BDH architectural family incorporating in-context demonstration learning ("Context Queries") and explicit test-time effort modulation across LOW, MEDIUM, and HIGH budgets without emitting scratchpad text tokens.</li>
+<li><strong>The Dragon Hatchling (BDH)</strong> (Kosowski et al., 2025, <a href="https://arxiv.org/abs/2509.26507">arXiv:2509.26507</a>): A biologically-inspired, post-transformer foundational architecture that establishes recurrent latent state updates and non-autoregressive parallel processing across continuous representations.</li>
+<li><strong>BDH-CQ</strong> (Kosowski et al., 2026, <a href="https://arxiv.org/abs/2608.09888">arXiv:2608.09888</a>): A specialized system built within the BDH family incorporating in-context demonstration learning ("Context Queries") and test-time effort modulation across LOW, MEDIUM, and HIGH budgets without emitting scratchpad text tokens.</li>
 </ul>
 
 <hr />
 
-<h3>6. Evidence Classification: Strengths vs. Weaknesses</h3>
+<h3>6. Evidence Classification: Strengths, Weaknesses, and Maturity</h3>
 
 <ul>
-<li><strong>Our Experimental Results</strong>: Classified as <strong>own toy implementation, empirically measured, not independently audited</strong>. Evaluated on procedural synthetic mazes; while numerically reproducible and rigorously benchmarked with deterministic seeds, it operates on a restricted 2D spatial domain rather than general multi-modal reasoning.</li>
-<li><strong>BDH-CQ External Baseline</strong>: The ARC-AGI-1 benchmark score (29.5% pass@2) is <strong>developer-reported, partially independently audited by Bielik/NYU for the headline score only</strong>. The internal scaling ablation (Table 5: 21.0% / 27.0% / 29.5% across effort tiers) remains developer-reported by Pathway's research group and has not been independently reproduced at scale.</li>
+<li><strong>Advantage Over Incumbents</strong>: Recurrent latent iteration eliminates <i>O</i>(<i>N</i>²) KV-cache bloat and syntax drift, enabling variable-effort inference within a fixed memory envelope.</li>
+<li><strong>Where It Performs Worse / Remains Untested</strong>: Untested on open-ended natural language generation where sequential text tokens are the required output modality.</li>
+<li><strong>Our Experimental Results</strong>: Classified as <strong>own toy implementation, empirically measured, not independently audited</strong> on synthetic 2D mazes.</li>
+<li><strong>BDH-CQ External Baseline</strong>: ARC-AGI-1 score (29.5% pass@2) is <strong>developer-reported, partially independently audited by Bielik/NYU for the headline score only</strong>. The internal scaling ablation (Table 5: 21.0% / 27.0% / 29.5% across effort tiers) is developer-reported and not independently reproduced.</li>
 </ul>
 
 <hr />
 
 <h3>7. Primary Limitation &amp; Open Question</h3>
 
-<p>While recurrent latent scaling eliminates token-generation overhead and memory bloat, it introduces a fundamental interpretability bottleneck: <strong>latent reasoning lacks explicit symbolic intermediate auditability</strong>. If a model fails at step <i>K</i> = 4, diagnosing whether the failure stemmed from latent channel saturation, gradient vanishing across recurrent unrolling, or feature drift requires probing classifiers rather than reading an English scratchpad. Developing standardized, zero-overhead probing techniques for continuous recurrent latent trajectories remains a crucial open research question.</p>
+<p>While recurrent latent scaling avoids token-generation overhead, it introduces a key bottleneck: <strong>latent reasoning lacks explicit symbolic auditability</strong>. If a model fails at step <i>K</i> = 4, diagnosing whether failure stemmed from representation saturation, gradient vanishing, or feature drift requires probing classifiers rather than reading an English scratchpad. Developing standardized, zero-overhead probing techniques for continuous recurrent latent trajectories remains a crucial open research question.</p>
+
+<hr />
+
+<h3>8. Where to Continue Learning</h3>
+
+<ul>
+<li><strong>BDH Foundations</strong>: Kosowski et al. (2025), <em>"The Dragon Hatchling"</em>, <a href="https://arxiv.org/abs/2509.26507">arXiv:2509.26507</a> and code: <a href="https://github.com/pathwaycom/bdh">github.com/pathwaycom/bdh</a>.</li>
+<li><strong>BDH-CQ Technical Report</strong>: Kosowski et al. (2026), <a href="https://arxiv.org/abs/2608.09888">arXiv:2608.09888</a>.</li>
+<li><strong>Test-Time Compute Theory</strong>: Snell et al. (2024), <a href="https://arxiv.org/abs/2408.03314">arXiv:2408.03314</a>.</li>
+<li><strong>Interactive Explainer &amp; Verification</strong>: Live app, empirical plots, and step traces: <a href="https://theshrihari.github.io/Dataforge-Submission/">https://theshrihari.github.io/Dataforge-Submission/</a>.</li>
+</ul>
 
 </body>
 </html>
